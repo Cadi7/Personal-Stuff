@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Folder | University Stuff{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg">
+    <h1 class="text-2xl font-bold text-white mb-6">Delete Folder</h1>
+
+    <div class="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <div class="mr-3 pt-0.5">
+                <i class="fas fa-exclamation-triangle text-red-400"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-white mb-1">Warning</h3>
+                <p class="text-white/80">
+                    Are you sure you want to delete the folder "{{ folder.name }}"?
+                    {% if folder.files.exists or folder.children.exists %}
+                    This folder contains
+                    {% if folder.files.exists %}{{ folder.files.count }} file{{ folder.files.count|pluralize }}{% endif %}
+                    {% if folder.files.exists and folder.children.exists %}and {% endif %}
+                    {% if folder.children.exists %}{{ folder.children.count }} subfolder{{ folder.children.count|pluralize }}{% endif %}
+                    which will also be deleted. This action cannot be undone.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" action="">
+        {% csrf_token %}
+        <div class="flex justify-between gap-4">
+            <a href="{% if folder.parent %}{{ folder.parent.get_absolute_url }}{% else %}{% url 'folder_list' %}{% endif %}" class="btn-card btn-blue w-1/2 text-center">
+                Cancel
+            </a>
+            <button type="submit" class="btn-card btn-red w-1/2 text-center">
+                Delete Permanently
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

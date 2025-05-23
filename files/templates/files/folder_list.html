@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}My Files | University Stuff{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-4">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white">My Files</h1>
+        <div class="flex space-x-3">
+            <a href="{% url 'file_upload' %}" class="btn-card btn-green">
+                <i class="fas fa-upload mr-1"></i> Upload Files
+            </a>
+        </div>
+    </div>
+
+    <!-- Folder actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white/10 backdrop-blur-md rounded-lg p-4">
+            <h2 class="text-lg font-semibold mb-3">Create New Folder</h2>
+            <form method="post" action="" class="flex space-x-2">
+                {% csrf_token %}
+                <input id="newFolderInput" type="text" name="name" placeholder="Folder name" required
+                       class="flex-1 px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <button type="submit" class="btn-card btn-blue">
+                    Create
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-md rounded-lg p-4">
+            <h2 class="text-lg font-semibold mb-3">Search Files & Folders</h2>
+            <form method="get" action="" class="flex space-x-2">
+                <input type="text" name="q" placeholder="Search..." value="{{ request.GET.q|default:'' }}"
+                       class="flex-1 px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <button type="submit" class="btn-card btn-purple">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick filters -->
+    <div class="flex flex-wrap gap-3 mb-6">
+        <a href="?filter=recent" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all duration-200">
+            <i class="fas fa-clock mr-1"></i> Recent Files
+        </a>
+        <a href="?filter=images" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all duration-200">
+            <i class="fas fa-image mr-1"></i> Images
+        </a>
+        <a href="?filter=documents" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all duration-200">
+            <i class="fas fa-file-alt mr-1"></i> Documents
+        </a>
+        <a href="?filter=pdfs" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all duration-200">
+            <i class="fas fa-file-pdf mr-1"></i> PDFs
+        </a>
+    </div>
+
+    <!-- Content listing -->
+    <div class="grid grid-cols-1 gap-6">
+        <!-- Root Folders -->
+        {% if root_folders %}
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-4">Folders</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {% for folder in root_folders %}
+                <a href="{{ folder.get_absolute_url }}" class="bg-white/10 backdrop-blur-md hover:bg-white/15 transition-all duration-200 rounded-lg p-4 flex items-center">
+                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-folder text-white text-xl"></i>
+                    </div>
+                    <div class="flex-1 overflow-hidden">
+                        <div class="text-white font-medium truncate">{{ folder.name }}</div>
+                        <div class="text-white/60 text-xs">
+                            {{ folder.children.count }} folder{{ folder.children.count|pluralize }},
+                            {{ folder.files.count }} file{{ folder.files.count|pluralize }}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Root Files (if any) -->
+        {% if root_files %}
+        <div>
+            <h2 class="text-xl font-semibold mb-4">Files</h2>
+            <div class="bg-white/10 backdrop-blur-md rounded-lg overflow-hidden">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-white/10 text-left">
+                            <th class="px-4 py-3">Name</th>
+                            <th class="px-4 py-3 hidden sm:table-cell">Size</th>
+                            <th class="px-4 py-3 hidden md:table-cell">Modified</th>
+                            <th class="px-4 py-3 hidden lg:table-cell">Type</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in root_files %}
+                        <tr class="border-t border-white/10 hover:bg-white/5">
+                            <td class="px-4 py-3 flex items-center">
+                                <div class="w-8 h-8 rounded flex items-center justify-center mr-3
+                                            {% if file.is_image %}bg-green-600
+                                            {% elif file.is_document %}bg-blue-600
+                                            {% elif file.is_pdf %}bg-red-600
+                                            {% else %}bg-gray-600{% endif %}">
+                                    <i class="fas {% if file.is_image %}fa-image{% elif file.is_pdf %}fa-file-pdf{% elif file.is_document %}fa-file-alt{% else %}fa-file{% endif %} text-white text-sm"></i>
+                                </div>
+                                <a href="{{ file.get_absolute_url }}" class="text-white hover:underline">
+                                    {{ file.name }}
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-white/70 hidden sm:table-cell">{{ file.size_display }}</td>
+                            <td class="px-4 py-3 text-white/70 hidden md:table-cell">{{ file.updated_at|date:"M d, Y" }}</td>
+                            <td class="px-4 py-3 text-white/70 hidden lg:table-cell">{{ file.get_file_type_display }}</td>
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{{ file.get_download_url }}" class="p-2 bg-white/10 hover:bg-white/20 rounded" title="Download">
+                                        <i class="fas fa-download text-white/70"></i>
+                                    </a>
+                                    {% if user == file.owner %}
+                                    <a href="{{ file.get_edit_url }}" class="p-2 bg-white/10 hover:bg-white/20 rounded" title="Edit">
+                                        <i class="fas fa-edit text-white/70"></i>
+                                    </a>
+                                    <a href="{{ file.get_delete_url }}" class="p-2 bg-white/10 hover:bg-white/20 rounded" title="Delete">
+                                        <i class="fas fa-trash text-white/70"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not root_folders and not root_files %}
+        <div class="text-center py-10">
+            <div class="w-20 h-20 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center">
+                <i class="far fa-folder-open text-white/50 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">No files or folders yet</h3>
+            <p class="text-white/70 mb-6">Upload your first file or create a folder to get started</p>
+            <div class="flex justify-center space-x-4">
+                <a href="{% url 'file_upload' %}" class="btn-card btn-green">
+                    <i class="fas fa-upload mr-2"></i> Upload Files
+                </a>
+                <button type="button" onclick="document.getElementById('newFolderInput').focus()" class="btn-card btn-blue">
+                    <i class="fas fa-folder-plus mr-2"></i> New Folder
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

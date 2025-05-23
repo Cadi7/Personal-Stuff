@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}File Details | University Stuff{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-lg">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-white">File Details</h1>
+        <div class="flex space-x-3">
+            <a href="{{ file.get_download_url }}" class="btn-card btn-blue">
+                <i class="fas fa-download mr-2"></i> Download
+            </a>
+            {% if user == file.owner %}
+            <a href="{{ file.get_edit_url }}" class="btn-card btn-green">
+                <i class="fas fa-edit mr-2"></i> Edit
+            </a>
+            <a href="{{ file.get_delete_url }}" class="btn-card btn-amber">
+                <i class="fas fa-trash mr-2"></i> Delete
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2">
+            <div class="bg-white/15 backdrop-blur-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">{{ file.name }}</h2>
+
+                <div class="mb-4">
+                    <div class="text-white/60 text-sm mb-1">Description</div>
+                    <div>{{ file.description|default:"No description provided." }}</div>
+                </div>
+
+                {% if file.tags %}
+                <div class="mb-4">
+                    <div class="text-white/60 text-sm mb-1">Tags</div>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tag in file.tags.all %}
+                        <span class="px-2 py-1 bg-purple-600/50 rounded-full text-xs">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if file.is_previewable %}
+                <div class="mt-6">
+                    <div class="text-white/60 text-sm mb-1">Preview</div>
+                    <div class="bg-white/5 p-4 rounded-lg">
+                        {% if file.is_image %}
+                        <img src="{{ file.file.url }}" alt="{{ file.name }}" class="max-w-full h-auto rounded">
+                        {% elif file.is_pdf %}
+                        <iframe src="{{ file.file.url }}" width="100%" height="500" class="rounded"></iframe>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <div class="bg-white/15 backdrop-blur-md rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">File Information</h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <div class="text-white/60 text-sm">Type</div>
+                        <div>{{ file.get_file_type_display }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-white/60 text-sm">Size</div>
+                        <div>{{ file.size_display }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-white/60 text-sm">Created</div>
+                        <div>{{ file.created_at }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-white/60 text-sm">Last Modified</div>
+                        <div>{{ file.updated_at }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-white/60 text-sm">Owner</div>
+                        <div>{{ file.owner.username }}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-white/60 text-sm">Location</div>
+                        <div>
+                            <a href="{{ file.folder.get_absolute_url }}" class="hover:underline">
+                                {{ file.folder.name }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
